@@ -1,40 +1,46 @@
 name: Daily News Crawler
 
 on:
-  workflow_dispatch:          # 필요할 때 수동 실행
-  schedule:                   # 매일 KST 새벽 1시 = UTC 16:00
-    - cron: '0 16 * * *'
+  workflow_dispatch:        # 수동 실행 버튼
+  schedule:                 # 매일 KST 새벽 1시
+    - cron: '0 16 * * *'    # (UTC 16:00 = KST 01:00)
 
 jobs:
   crawl:
-    runs-on: self-hosted      # ↔ 러너 등록 때 기본값 self-hosted 로 뒀음
+    runs-on: self-hosted     # <-- 맥 mini 러너
+
+    # setup-python 이 쓸 캐시/임시 경로를 러너 작업 폴더로 고정
+    env:
+      RUNNER_TOOL_CACHE: ${{ github.workspace }}/_tool
+      RUNNER_TEMP:       ${{ github.workspace }}/_temp
+
     steps:
-      # 1) 저장소 체크아웃
+      # 1) (권한 문제 방지) 캐시/임시 폴더 미리 생성
+      - name: Prepare tool & temp dirs
+        run: |
+          mkdir -p "$RUNNER_TOOL_CACHE" "$RUNNER_TEMP"
+
+      # 2) 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2) Python 3.10 설치 (캐시·임시 폴더를 작업 디렉터리로 변경)
-      - name: Set up Python 3.10
+      # 3) Python 3.10 설치
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-        env:
-          RUNNER_TOOL_CACHE: ${{ github.workspace }}/_tool
-          RUNNER_TEMP:       ${{ github.workspace }}/_temp
 
-      # 3) 의존성 설치
+      # 4) 의존성 설치
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 gspread google-auth
 
-      # 4) GCP 키(Base64) → service_account.json 복원
+      # 5) GCP 서비스 계정 키(Base64) → JSON 파일로 디코딩
       - name: Decode GCP key
         run: |
           echo "$GOOGLE_APPLICATION_CREDENTIALS_B64" | base64 -d > service_account.json
 
-      # 5) 크롤러 실행
+      # 6) 크롤러 실행
       - name: Run crawler
         run: |
           python news_crawler_automation.py
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ./service_account.json
