@@ -10,11 +10,22 @@ import json
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # GitHub Secrets에서 service_account.json의 내용을 가져오기
-key_json = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-# 구글 인증 처리
-creds = Credentials.from_service_account_info(key_json)
-client = gspread.authorize(creds)
+# 디버깅 출력 - 환경 변수 확인
+if google_credentials is None:
+    print("Environment variable 'GOOGLE_APPLICATION_CREDENTIALS' is not set correctly.")
+else:
+    print("Successfully retrieved environment variable.")
+
+# Google 인증 처리
+if google_credentials:
+    key_json = json.loads(google_credentials)
+    creds = Credentials.from_service_account_info(key_json)
+    client = gspread.authorize(creds)
+else:
+    print("Unable to retrieve valid credentials from the environment.")
+    exit(1)
 
 # 공유된 Google Sheets ID
 SHEET_ID = '1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc'
