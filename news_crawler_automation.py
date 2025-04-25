@@ -8,9 +8,9 @@ import json
 import base64
 
 # Google Sheets 인증 (Base64로 인코딩된 서비스 계정 키를 환경변수에서 가져오기)
-b64_key = os.getenv("GCP_KEY_BASE64")
+b64_key = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
 if not b64_key:
-    raise ValueError("GCP_KEY_BASE64 is missing in environment variables.")
+    raise ValueError("GOOGLE_APPLICATION_CREDENTIALS_B64 is missing in environment variables.")
 
 key_path = "service_account.json"
 with open(key_path, "wb") as f:
@@ -89,7 +89,7 @@ def crawl_people():
     base = 'https://people.com'
     res = requests.get(f'{base}/tag/the-scoop/')
     soup = BeautifulSoup(res.text, 'html.parser')
-    links = [base + a['href'] for a in soup.select('a[data-testid="CardLink"]') if a['href'].startswith('/')]
+    links = [base + a['href'] for a in soup.select('a[data-testid=\"CardLink\"]') if a['href'].startswith('/')]
     data = []
     for url in links[:3]:
         r = requests.get(url)
