@@ -1,17 +1,26 @@
 import requests
 from bs4 import BeautifulSoup
 import gspread
-import google.auth
+from google.oauth2.service_account import Credentials
 from datetime import datetime
+import os
+import json
 
-# Google Sheets 인증 - Application Default Credentials
+# Google Sheets 인증
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-creds, _ = google.auth.default(scopes=SCOPES)
+
+# GitHub Secrets에서 service_account.json의 내용을 가져오기
+print("Successfully retrieved environment variable.")
+google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+print("Google credentials:", google_credentials)
+
+key_json = json.loads(google_credentials)
+creds = Credentials.from_service_account_info(key_json)
 client = gspread.authorize(creds)
 
-# 공유된 Google Sheets ID 및 워크시트명
+# 공유된 Google Sheets ID 및 정확한 워크시트 이름
 SHEET_ID = '1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc'
-SHEET_NAME = 'Sheet1'
+SHEET_NAME = 'github news room'
 sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
 # 공통 저장 함수
@@ -19,7 +28,7 @@ def save_to_sheet(data):
     for item in data:
         sheet.append_row([item['source'], item['title'], item['date'], item['url'], item['body']])
 
-# 날짜 포맷 함수
+# 날짜 포맷
 def format_date(date_str):
     try:
         return datetime.strptime(date_str, '%B %d, %Y').strftime('%Y-%m-%d')
