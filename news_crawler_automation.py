@@ -62,15 +62,9 @@ def clean(raw: str, maxlen=3000) -> str:
 
 fmt = lambda t: datetime(*t[:6]).strftime("%Y-%m-%d")
 
-def save(rows):  # 안정성 높이기 위해 1개씩 append
-    saved = 0
-    for row in rows:
-        try:
-            sheet.append_row(row, value_input_option="RAW")
-            saved += 1
-        except Exception as e:
-            print(f"⚠ 저장 실패: {row[1][:40]}... → {e}")
-    return saved
+def save(rows):  # rows=list[list[str]]
+    if rows:
+        sheet.append_rows(rows, value_input_option="RAW")
 
 # ─────────────────────── 3. RSS 수집 ─────────────────────────
 def fetch_xml(url: str, tries=5, pause=2.0):
@@ -94,17 +88,21 @@ def collect(max_each=5):
         feed = feedparser.parse(xml)
         print(f"{src}: {len(feed.entries)} entries")
         for e in feed.entries[:max_each]:
+            raw = e.summary if hasattr(e, "summary") else e.get("content", [{}])[0].get("value", "")
+            body = clean(raw)
+            if len(body) < 300:
+                continue  # 300자 미만은 제외
             rows.append([
                 src,
                 e.title,
                 fmt(e.published_parsed) if hasattr(e, "published_parsed") else fmt(datetime.utcnow().timetuple()),
                 e.link,
-                clean(e.summary if hasattr(e, "summary") else ""),
+                body,
             ])
     return rows
 
 # ─────────────────────── 4. 실행 ────────────────────────────
 if __name__ == "__main__":
     data = collect()
-    saved = save(data)
-    print(f"✓ {saved} articles saved (out of {len(data)} parsed)")
+    save(data)
+    print(f"✓ saved {len(data)} articles (RSS)")
