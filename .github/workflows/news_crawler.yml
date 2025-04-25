@@ -3,24 +3,25 @@ name: Run crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 20 * * *'
+    - cron: '0 20 * * *'  # 매일 KST 5:00 실행
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     env:
-      GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}  # ✅ 여기 추가
+      GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}  # ← 이 줄 추가 필수
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: pip install requests beautifulsoup4 gspread google-auth
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 gspread google-auth
 
-    - name: Run crawler
-      run: python news_crawler_automation.py
+      - name: Run crawler
+        run: python news_crawler_automation.py
