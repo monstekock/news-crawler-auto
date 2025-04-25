@@ -3,27 +3,27 @@ name: Run News Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 18 * * *'  # 매일 KST 오전 3시 (UTC 18시)
+    - cron: '0 20 * * *' # 매일 오전 5시 (KST 기준)
 
 jobs:
-  run:
+  run-crawler:
     runs-on: ubuntu-latest
+
     env:
       GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        pip install requests beautifulsoup4 gspread google-auth
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 gspread google-auth
 
-    - name: Run crawler
-      run: |
-        python news_crawler_automation.py
+      - name: Run crawler
+        run: python news_crawler_automation.py
