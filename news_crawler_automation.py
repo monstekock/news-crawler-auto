@@ -1,19 +1,20 @@
-### news_crawler_automation
-# 크롤링 대상: TMZ, US Weekly, People.com
-# 결과 저장: Google Sheets
-# 실행 방식: GitHub Actions를 통해 매일 새벽 자동 실행
-
 import requests
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os
+import json
 
 # Google Sheets 인증
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-CREDS = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
-client = gspread.authorize(CREDS)
+
+# GitHub Secrets에서 service_account.json의 내용을 가져오기
+key_json = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+
+# 구글 인증 처리
+creds = Credentials.from_service_account_info(key_json)
+client = gspread.authorize(creds)
 
 # 공유된 Google Sheets ID
 SHEET_ID = '1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc'
