@@ -1,10 +1,8 @@
-import requests
-from bs4 import BeautifulSoup
-import gspread
-from google.oauth2.service_account import Credentials
-from datetime import datetime
 import os
 import json
+from google.oauth2 import service_account
+import gspread
+from datetime import datetime
 
 # Google Sheets 인증
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -13,16 +11,20 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # 디버깅 출력 - 환경 변수 확인
-if google_credentials is None:
+if google_credentials is None or google_credentials == "":
     print("Environment variable 'GOOGLE_APPLICATION_CREDENTIALS' is not set correctly.")
 else:
     print("Successfully retrieved environment variable.")
 
 # Google 인증 처리
 if google_credentials:
-    key_json = json.loads(google_credentials)
-    creds = Credentials.from_service_account_info(key_json)
-    client = gspread.authorize(creds)
+    try:
+        key_json = json.loads(google_credentials)
+        creds = service_account.Credentials.from_service_account_info(key_json)
+        client = gspread.authorize(creds)
+    except json.JSONDecodeError as e:
+        print("Failed to decode JSON from environment variable:", e)
+        exit(1)
 else:
     print("Unable to retrieve valid credentials from the environment.")
     exit(1)
