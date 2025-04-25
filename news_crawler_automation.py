@@ -63,8 +63,9 @@ def clean(raw: str, maxlen=3000) -> str:
 fmt = lambda t: datetime(*t[:6]).strftime("%Y-%m-%d")
 
 def save(rows):                                   # rows=list[list[str]]
-    if rows:
-        sheet.append_rows(rows, value_input_option="RAW")
+    filtered = [r for r in rows if len(r[4].strip()) >= 200]  # 본문 최소 길이 필터링
+    if filtered:
+        sheet.append_rows(filtered, value_input_option="RAW")
 
 # ─────────────────────── 3. RSS 수집 ─────────────────────────
 def fetch_xml(url: str, tries=5, pause=2.0):
