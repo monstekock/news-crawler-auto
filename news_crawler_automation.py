@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 news_crawler_automation.py
-The-Sun · US Weekly
-각 사이트 최신 10건씩 Google Sheets 저장
+The-Sun · US Weekly (본문 content만, 300자 이상만 저장)
 """
 
 import os, base64, html, time, requests, feedparser
@@ -59,6 +58,13 @@ def clean(raw: str, maxlen=3000) -> str:
 
 fmt = lambda t: datetime(*t[:6]).strftime("%Y-%m-%d")
 
+def extract_content(entry, min_len=300):
+    if hasattr(entry, "content") and entry.content:
+        raw = entry.content[0].value
+        text = clean(raw)
+        return text if len(text) >= min_len else None
+    return None
+
 def save(rows):                                   # rows=list[list[str]]
     if rows:
         sheet.append_rows(rows, value_input_option="RAW")
@@ -85,16 +91,15 @@ def collect(max_each=10):
         feed = feedparser.parse(xml)
         print(f"{src}: {len(feed.entries)} entries")
         for e in feed.entries[:max_each]:
-            body = clean(e.summary if hasattr(e, "summary") else "")
-            if len(body) < 300:
-                continue  # ⛔️ 500자 미만은 저장하지 않음
-            rows.append([
-                src,
-                e.title,
-                fmt(e.published_parsed) if hasattr(e, "published_parsed") else fmt(datetime.utcnow().timetuple()),
-                e.link,
-                body,
-            ])
+            body = extract_content(e)
+            if body:
+                rows.append([
+                    src,
+                    e.title,
+                    fmt(e.published_parsed) if hasattr(e, "published_parsed") else fmt(datetime.utcnow().timetuple()),
+                    e.link,
+                    body,
+                ])
     return rows
 
 # ─────────────────────── 4. 실행 ────────────────────────────
