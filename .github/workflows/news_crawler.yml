@@ -3,14 +3,14 @@ name: Run News Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 20 * * *' # 매일 오전 5시 (KST 기준)
+    - cron: '0 19 * * *'  # 매일 4AM KST (UTC 기준 19시)
 
 jobs:
-  run-crawler:
+  crawl:
     runs-on: ubuntu-latest
 
     env:
-      GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}
+      GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}  # base64로 인코딩된 Google 서비스 키
 
     steps:
       - name: Checkout code
@@ -24,6 +24,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4 gspread google-auth
+
+      - name: Decode GCP key
+        run: |
+          echo "$GCP_KEY_BASE64" | base64 -d > service_account.json
 
       - name: Run crawler
         run: python news_crawler_automation.py
