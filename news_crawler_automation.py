@@ -16,6 +16,9 @@ if google_credentials is None or google_credentials == "":
 else:
     print("Successfully retrieved environment variable.")
 
+# 디버깅: google_credentials 내용을 출력 (길어서 처음 1000자만 확인)
+print("Google credentials:", google_credentials[:1000])
+
 # Google 인증 처리
 if google_credentials:
     try:
