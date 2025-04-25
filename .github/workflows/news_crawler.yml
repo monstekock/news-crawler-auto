@@ -1,28 +1,26 @@
-name: news_crawler.yml
+name: Run crawler
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 20 * * *'
 
 jobs:
-  run-news-crawler:
+  run:
     runs-on: ubuntu-latest
+    env:
+      GCP_KEY_BASE64: ${{ secrets.GCP_KEY_BASE64 }}  # ✅ 여기 추가
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          pip install requests beautifulsoup4 gspread google-auth
+    - name: Install dependencies
+      run: pip install requests beautifulsoup4 gspread google-auth
 
-      - name: Decode service account key from secret
-        run: |
-          echo "${{ secrets.GCP_KEY_BASE64 }}" | base64 -d > service_account.json
-
-      - name: Run crawler
-        run: python news_crawler_automation.py
+    - name: Run crawler
+      run: python news_crawler_automation.py
