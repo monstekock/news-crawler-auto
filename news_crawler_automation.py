@@ -7,7 +7,7 @@ from datetime import datetime
 # Google Sheets 인증
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
-# GitHub Secrets에서 service_account.json의 내용을 가져오기
+# GitHub Secrets에서 서비스 계정 JSON 문자열을 가져오기
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # 디버깅 출력 - 환경 변수 확인
@@ -16,12 +16,10 @@ if google_credentials is None or google_credentials == "":
 else:
     print("Successfully retrieved environment variable.")
 
-# 추가 디버깅 출력 - JSON 값이 제대로 읽어지는지 확인
-print("Google credentials:", google_credentials[:1000])  # 처음 1000글자만 출력 (값이 길기 때문에 일부만 확인)
-
 # Google 인증 처리
 if google_credentials:
     try:
+        # GitHub Secrets에서 읽은 JSON 데이터를 바로 파싱
         key_json = json.loads(google_credentials)
         creds = service_account.Credentials.from_service_account_info(key_json)
         client = gspread.authorize(creds)
