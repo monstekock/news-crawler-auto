@@ -1,35 +1,31 @@
 name: crawl
 
 on:
-  workflow_dispatch:        # 수동 실행
+  workflow_dispatch:        # 수동 실행 버튼
   schedule:
-    - cron: '0 16 * * *'    # KST 01:00 = UTC 16:00
+    - cron: '0 16 * * *'    # 매일 KST 01:00 (UTC 16:00)
 
 jobs:
   run:
-    runs-on: self-hosted    # 방금 등록한 M1 맥 러너
+    runs-on: self-hosted    # Mac-mini 러너
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
+
     steps:
-      # 1) 저장소 코드 체크아웃
+      # 1) 저장소 코드 받기
       - uses: actions/checkout@v3
 
-      # 2) Python 설치 (macOS ARM64 용)
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      # 3) 의존 패키지 설치
-      - name: Install deps
+      # 2) 의존 패키지 설치 (mac 기본 python3 사용)
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 gspread google-auth
+          python3 -m pip install --upgrade pip
+          python3 -m pip install requests beautifulsoup4 gspread google-auth
 
-      # 4) GCP 키(Base64) → json 파일 생성
+      # 3) GCP 키(Base64) → service_account.json 복원
       - name: Decode GCP key
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
         run: |
           echo "$GOOGLE_APPLICATION_CREDENTIALS_B64" | base64 -d > service_account.json
 
-      # 5) 크롤러 실행
+      # 4) 크롤러 실행
       - name: Run crawler
-        run: python news_crawler_automation.py
+        run: python3 news_crawler_automation.py
