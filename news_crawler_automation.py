@@ -1,139 +1,74 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-news_crawler_automation.py
-Google Sheets에 최신 연예 뉴스 3개씩 저장
-(GitHub Actions self-hosted Runner에서 실행)
-
-▶ 필요한 GitHub Secret
-   GOOGLE_APPLICATION_CREDENTIALS_B64  ─ 서비스계정 JSON 을 base64 로 인코딩한 값
-▶ Google Sheets
-   스프레드시트 ID  : 1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc
-   워크시트(시트) 이름 : github news room
+news_crawler_automation.py  (RSS 버전)
+TMZ · US Weekly · People 최신 기사 5건씩 ⇒ Google Sheets 저장
 """
 
-import os, json, base64, io, requests
-from bs4 import BeautifulSoup
+import os, base64, feedparser, requests, html
+from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from bs4 import BeautifulSoup   # 본문 추출 보강용
 
-# ──────────────────────────────────────────────────────
-# 1) Creds 불러오기 (Secret → service_account.json 임시 생성)
-# ──────────────────────────────────────────────────────
+# ────────────────── 0. Google 인증 ──────────────────
 B64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
 if not B64:
-    raise ValueError("❌ env GOOGLE_APPLICATION_CREDENTIALS_B64 가 없습니다.")
+    raise RuntimeError("env GOOGLE_APPLICATION_CREDENTIALS_B64 not found")
 
-KEY_PATH = "service_account.json"
-with open(KEY_PATH, "wb") as f:
+with open("service_account.json","wb") as f:
     f.write(base64.b64decode(B64))
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-creds = Credentials.from_service_account_file(KEY_PATH, scopes=SCOPES)
-client = gspread.authorize(creds)
+creds = Credentials.from_service_account_file(
+    "service_account.json",
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
+gc = gspread.authorize(creds)
 
-# ──────────────────────────────────────────────────────
-# 2) Google Sheet 객체
-# ──────────────────────────────────────────────────────
 SHEET_ID   = "1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc"
 SHEET_NAME = "github news room"
-sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+sheet      = gc.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
-def save_rows(rows:list[dict]) -> None:
-    """[{source,title,date,url,body}, …] → 시트 행 추가"""
-    for r in rows:
-        sheet.append_row([r["source"], r["title"], r["date"], r["url"], r["body"]])
+# ────────────────── 1. RSS 피드 목록 ─────────────────
+FEEDS = {
+    "TMZ"       : "https://www.tmz.com/rss.xml",
+    "US Weekly" : "https://www.usmagazine.com/feed/",
+    "People"    : "https://people.com/feed/",
+}
 
-# ──────────────────────────────────────────────────────
-# 3) 도움 함수
-# ──────────────────────────────────────────────────────
-def fmt(date_str:str) -> str:
+# ────────────────── 2. 도우미 ────────────────────────
+def clean_html(raw: str, maxlen: int = 3000) -> str:
+    txt = html.unescape(
+        BeautifulSoup(raw, "html.parser").get_text(" ", strip=True)
+    )
+    return txt[:maxlen]
+
+def fmt(dt_struct) -> str:
+    """feedparser time → YYYY-MM-DD"""
     try:
-        return datetime.strptime(date_str, "%B %d, %Y").strftime("%Y-%m-%d")
-    except:
+        return datetime(*dt_struct[:6]).strftime("%Y-%m-%d")
+    except Exception:
         return datetime.utcnow().strftime("%Y-%m-%d")
 
-HEADERS = {"User-Agent": "Mozilla/5.0"}   # 간단한 우회용
+def save(rows):
+    for r in rows:
+        sheet.append_row(r, value_input_option="RAW")
 
-# ──────────────────────────────────────────────────────
-# 4) 사이트별 크롤러
-# ──────────────────────────────────────────────────────
-def crawl_tmz() -> list[dict]:
-    base = "https://www.tmz.com"
-    res  = requests.get(f"{base}/categories/breaking-news/", headers=HEADERS, timeout=20)
-    soup = BeautifulSoup(res.text, "html.parser")
+# ────────────────── 3. 메인 수집 ─────────────────────
+def collect(max_each: int = 5):
+    out = []
+    for src, url in FEEDS.items():
+        feed = feedparser.parse(url)
+        for entry in feed.entries[:max_each]:
+            title = entry.title
+            link  = entry.link
+            date  = fmt(entry.published_parsed) if hasattr(entry,"published_parsed") else datetime.utcnow().strftime("%Y-%m-%d")
+            body  = clean_html(entry.summary if hasattr(entry,"summary") else "")
+            out.append([src, title, date, link, body])
+    return out
 
-    links = [base + a["href"] for a in soup.select('article a[data-analytics-id="CardLink"]')
-             if a["href"].startswith("/")]
-    print("TMZ links →", links)                          #  ← 디버그용
-
-    data = []
-    for url in links[:3]:
-        s = BeautifulSoup(requests.get(url, headers=HEADERS, timeout=20).text, "html.parser")
-        title = s.select_one("h1.article-title")
-        body  = s.select_one("div.article-content")
-        date  = s.select_one("span.publish-date")
-        if title and body:
-            data.append({
-                "source":"TMZ",
-                "title": title.text.strip(),
-                "date" : fmt(date.text.strip() if date else ""),
-                "url"  : url,
-                "body" : body.text.strip().replace("\n"," ")[:3000]
-            })
-    return data
-
-def crawl_usweekly() -> list[dict]:
-    base = "https://www.usmagazine.com"
-    soup = BeautifulSoup(requests.get(f"{base}/news/", headers=HEADERS, timeout=20).text, "html.parser")
-    links = [a["href"] for a in soup.select("a.content-card__link") if a["href"].startswith("https://")]
-    print("US Weekly links →", links)
-
-    data=[]
-    for url in links[:3]:
-        s = BeautifulSoup(requests.get(url, headers=HEADERS, timeout=20).text, "html.parser")
-        title = s.select_one("h1.post-title")
-        body  = s.select_one("div.post-content")
-        date  = s.select_one("time.published-date")
-        if title and body:
-            data.append({
-                "source":"US Weekly",
-                "title": title.text.strip(),
-                "date" : fmt(date.text.strip() if date else ""),
-                "url"  : url,
-                "body" : body.text.strip().replace("\n"," ")[:3000]
-            })
-    return data
-
-def crawl_people() -> list[dict]:
-    base = "https://people.com"
-    soup = BeautifulSoup(requests.get(f"{base}/tag/the-scoop/", headers=HEADERS, timeout=20).text, "html.parser")
-    links = [base + a["href"] for a in soup.select('a[data-testid="CardLink"]') if a["href"].startswith("/")]
-    print("People links →", links)
-
-    data=[]
-    for url in links[:3]:
-        s = BeautifulSoup(requests.get(url, headers=HEADERS, timeout=20).text, "html.parser")
-        title = s.select_one("h1.headline")
-        body  = s.select_one("div.article-body")
-        date  = s.select_one("time.article-date")
-        if title and body:
-            data.append({
-                "source":"People",
-                "title": title.text.strip(),
-                "date" : fmt(date.text.strip() if date else ""),
-                "url"  : url,
-                "body" : body.text.strip().replace("\n"," ")[:3000]
-            })
-    return data
-
-# ──────────────────────────────────────────────────────
-# 5) 메인
-# ──────────────────────────────────────────────────────
+# ────────────────── 4. 실행 ─────────────────────────
 if __name__ == "__main__":
-    rows = crawl_tmz() + crawl_usweekly() + crawl_people()
-    print(f"✓ parsed {len(rows)} articles")
-    if rows:
-        save_rows(rows)
-        print("✓ saved to sheet")
-    else:
-        print("⚠ 0 articles - selectors 또는 사이트 구조를 확인하세요.")
+    rows = collect()
+    save(rows)
+    print(f"✓ saved {len(rows)} articles via RSS")
