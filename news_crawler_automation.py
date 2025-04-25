@@ -86,7 +86,7 @@ def collect(max_each=10):
         print(f"{src}: {len(feed.entries)} entries")
         for e in feed.entries[:max_each]:
             body = clean(e.summary if hasattr(e, "summary") else "")
-            if len(body) < 500:
+            if len(body) < 300:
                 continue  # ⛔️ 500자 미만은 저장하지 않음
             rows.append([
                 src,
