@@ -16,6 +16,9 @@ if google_credentials is None or google_credentials == "":
 else:
     print("Successfully retrieved environment variable.")
 
+# 추가 디버깅 출력 - JSON 값이 제대로 읽어지는지 확인
+print("Google credentials:", google_credentials[:1000])  # 처음 1000글자만 출력 (값이 길기 때문에 일부만 확인)
+
 # Google 인증 처리
 if google_credentials:
     try:
@@ -37,6 +40,7 @@ sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 # 공통 저장 함수
 def save_to_sheet(data):
     for item in data:
+        print(f"Saving item: {item}")  # 디버깅 출력 - 데이터를 저장하려는 항목 확인
         sheet.append_row([item['source'], item['title'], item['date'], item['url'], item['body']])
 
 # 날짜 포맷
@@ -69,54 +73,8 @@ def crawl_tmz():
             })
     return data
 
-# US Weekly 크롤러
-def crawl_usweekly():
-    base = 'https://www.usmagazine.com'
-    res = requests.get(f'{base}/news/')
-    soup = BeautifulSoup(res.text, 'html.parser')
-    links = [a['href'] for a in soup.select('a.content-card__link') if a['href'].startswith('https://')]
-    data = []
-    for url in links[:3]:
-        r = requests.get(url)
-        s = BeautifulSoup(r.text, 'html.parser')
-        title = s.select_one('h1.post-title')
-        body = s.select_one('div.post-content')
-        date = s.select_one('time.published-date')
-        if title and body:
-            data.append({
-                'source': 'US Weekly',
-                'title': title.text.strip(),
-                'date': format_date(date.text.strip() if date else ''),
-                'url': url,
-                'body': body.text.strip().replace('\n', ' ')[:3000]
-            })
-    return data
-
-# People 크롤러
-def crawl_people():
-    base = 'https://people.com'
-    res = requests.get(f'{base}/tag/the-scoop/')
-    soup = BeautifulSoup(res.text, 'html.parser')
-    links = [base + a['href'] for a in soup.select('a[data-testid="CardLink"]') if a['href'].startswith('/')] 
-    data = []
-    for url in links[:3]:
-        r = requests.get(url)
-        s = BeautifulSoup(r.text, 'html.parser')
-        title = s.select_one('h1.headline')
-        body = s.select_one('div.article-body')
-        date = s.select_one('time.article-date')
-        if title and body:
-            data.append({
-                'source': 'People',
-                'title': title.text.strip(),
-                'date': format_date(date.text.strip() if date else ''),
-                'url': url,
-                'body': body.text.strip().replace('\n', ' ')[:3000]
-            })
-    return data
-
 # 실행
 if __name__ == '__main__':
-    all_data = crawl_tmz() + crawl_usweekly() + crawl_people()
+    all_data = crawl_tmz()
     save_to_sheet(all_data)
     print(f"{len(all_data)} articles saved.")
