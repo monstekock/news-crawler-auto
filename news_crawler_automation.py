@@ -7,22 +7,21 @@ import os
 import json
 import base64
 
-# Google Sheets 인증 준비
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-# GitHub Actions 환경변수에서 base64 인코딩된 키 읽기
-encoded_key = os.environ.get('GCP_KEY_BASE64')
-if not encoded_key:
+# Google Sheets 인증 (Base64로 인코딩된 서비스 계정 키를 환경변수에서 가져오기)
+b64_key = os.getenv("GCP_KEY_BASE64")
+if not b64_key:
     raise ValueError("GCP_KEY_BASE64 is missing in environment variables.")
 
-# 디코딩 후 서비스 계정 JSON 객체로 변환
-key_json = json.loads(base64.b64decode(encoded_key).decode('utf-8'))
+key_path = "service_account.json"
+with open(key_path, "wb") as f:
+    f.write(base64.b64decode(b64_key))
 
-# Credentials 생성
-creds = Credentials.from_service_account_info(key_json, scopes=SCOPES)
+# 인증 및 클라이언트 생성
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+creds = Credentials.from_service_account_file(key_path, scopes=SCOPES)
 client = gspread.authorize(creds)
 
-# Google Sheets ID 및 Sheet 이름 설정
+# Google Sheets 설정
 SHEET_ID = '1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc'
 SHEET_NAME = 'github news room'
 sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
@@ -32,7 +31,7 @@ def save_to_sheet(data):
     for item in data:
         sheet.append_row([item['source'], item['title'], item['date'], item['url'], item['body']])
 
-# 날짜 포맷 함수
+# 날짜 포맷
 def format_date(date_str):
     try:
         return datetime.strptime(date_str, '%B %d, %Y').strftime('%Y-%m-%d')
@@ -90,7 +89,7 @@ def crawl_people():
     base = 'https://people.com'
     res = requests.get(f'{base}/tag/the-scoop/')
     soup = BeautifulSoup(res.text, 'html.parser')
-    links = [base + a['href'] for a in soup.select('a[data-testid=\"CardLink\"]') if a['href'].startswith('/')]
+    links = [base + a['href'] for a in soup.select('a[data-testid="CardLink"]') if a['href'].startswith('/')]
     data = []
     for url in links[:3]:
         r = requests.get(url)
