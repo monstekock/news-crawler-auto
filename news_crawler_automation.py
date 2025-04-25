@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 news_crawler_automation.py
-The-Sun · Variety · US Weekly · E! Online · BuzzFeed Celeb
-각 사이트 최신 5건씩 Google Sheets 저장
+The-Sun · US Weekly
+각 사이트 최신 10건씩 Google Sheets 저장
 """
 
 import os, base64, html, time, requests, feedparser
@@ -31,11 +31,8 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
 
 # ─────────────────────── 1. RSS 목록 ─────────────────────────
 FEEDS = {
-    "The-Sun"       : "https://www.the-sun.com/entertainment/feed/",
-    "Variety"       : "https://variety.com/feed/",
-    "US Weekly"     : "https://www.usmagazine.com/feed/",
-    "E! Online"     : "https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml",
-    "BuzzFeed Celeb": "https://www.buzzfeed.com/celebrity.xml",
+    "The-Sun"   : "https://www.the-sun.com/entertainment/feed/",
+    "US Weekly" : "https://www.usmagazine.com/feed/",
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
@@ -79,7 +76,7 @@ def fetch_xml(url: str, tries=5, pause=2.0):
         time.sleep(pause)
     return None
 
-def collect(max_each=5):
+def collect(max_each=10):
     rows = []
     for src, url in FEEDS.items():
         xml = fetch_xml(url)
@@ -88,10 +85,9 @@ def collect(max_each=5):
         feed = feedparser.parse(xml)
         print(f"{src}: {len(feed.entries)} entries")
         for e in feed.entries[:max_each]:
-            raw = e.get("content", [{}])[0].get("value", "") if "content" in e else getattr(e, "summary", "")
-            body = clean(raw)
-            if len(body) < 200:
-                continue
+            body = clean(e.summary if hasattr(e, "summary") else "")
+            if len(body) < 500:
+                continue  # ⛔️ 500자 미만은 저장하지 않음
             rows.append([
                 src,
                 e.title,
