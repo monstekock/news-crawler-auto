@@ -1,16 +1,14 @@
-name: Run News Crawler
+name: Daily News Crawler
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 20 * * *'  # 매일 오전 5시 (KST)
+    - cron: '0 16 * * *'     # 매일 KST 새벽 1시
+  workflow_dispatch:
 
 jobs:
-  crawl:
-    runs-on: ubuntu-latest
-
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
+  run-news-crawler:
+    # self-hosted 러너에서 실행하도록 변경
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -26,8 +24,11 @@ jobs:
           pip install requests beautifulsoup4 gspread google-auth
 
       - name: Decode GCP key
+        # GCP_KEY_BASE64 시크릿에 담긴 Base64 인코딩된 JSON 키를 디코드
         run: |
-          echo "$GOOGLE_APPLICATION_CREDENTIALS_B64" | base64 -d > service_account.json
+          echo "$GCP_KEY_BASE64" | base64 -d > service_account.json
 
       - name: Run crawler
-        run: python news_crawler_automation.py
+        # news_crawler_automation.py를 실행
+        run: |
+          python news_crawler_automation.py
