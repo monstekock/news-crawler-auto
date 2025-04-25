@@ -2,12 +2,13 @@ name: Daily News Crawler
 
 on:
   schedule:
-    - cron: '0 16 * * *'    # KST 새벽 1시
+    - cron: '0 16 * * *'  # 매일 KST 1시 (UTC 16시)
   workflow_dispatch:
 
 jobs:
   run-news-crawler:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -15,7 +16,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -24,7 +25,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 gspread google-auth
+          pip install requests beautifulsoup4 gspread google-auth google-auth-oauthlib
 
       - name: Run crawler
-        run: python news_crawler_automation.py
+        run: |
+          python news_crawler_automation.py
