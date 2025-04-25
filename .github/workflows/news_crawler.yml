@@ -1,36 +1,27 @@
-name: Daily News Crawler
+name: crawl
 
 on:
-  workflow_dispatch:            # 수동 실행용 버튼
-  schedule:
-    - cron: '0 16 * * *'        # 매일 KST 새벽 1시
+  workflow_dispatch:
 
 jobs:
-  crawl:
-    runs-on: self-hosted        # ★ Mac mini 러너(labels: self-hosted, macOS, ARM64)
+  run-news:
+    runs-on: self-hosted      # ← 직접 등록한 Mac mini 러너
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
     steps:
-      # 1) 저장소 코드 체크아웃
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # 2) 필요 패키지 설치 (러너 자체 python3 사용)
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install requests beautifulsoup4 gspread google-auth
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-      # 3) Base64 서비스 계정 키 → json 파일로 복원
+      - name: Install deps
+        run: pip install requests beautifulsoup4 gspread google-auth
+
       - name: Decode GCP key
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
         run: |
-          if [ -z "$GOOGLE_APPLICATION_CREDENTIALS_B64" ]; then
-            echo "❌ Secret GOOGLE_APPLICATION_CREDENTIALS_B64 가 없습니다."; exit 1;
-          fi
           echo "$GOOGLE_APPLICATION_CREDENTIALS_B64" | base64 -d > service_account.json
-          echo "✔️ service_account.json 복원 완료"
 
-      # 4) 크롤러 실행
       - name: Run crawler
-        run: |
-          python3 news_crawler_automation.py
+        run: python news_crawler_automation.py
