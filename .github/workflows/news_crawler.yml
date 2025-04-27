@@ -2,8 +2,6 @@ name: crawl
 
 on:
   workflow_dispatch:        # 수동 실행
-  schedule:
-    - cron: '0 15 * * *'    # 매일 KST 00:00
 
 jobs:
   run:
