@@ -30,8 +30,10 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
 
 # ─────────────────────── 1. RSS 목록 ─────────────────────────
 FEEDS = {
-    "The-Sun"   : "https://www.the-sun.com/entertainment/feed/",
-    "US Weekly" : "https://www.usmagazine.com/feed/",
+    "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
+    "US Weekly":      "https://www.usmagazine.com/feed/",
+    "ESPN Celeb":     "https://www.espn.com/espn/rss/sportscelebsnews",
+    "BleacherReport": "https://bleacherreport.com/articles/feed",
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
