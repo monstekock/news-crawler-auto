@@ -32,16 +32,16 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
 FEEDS = {
     "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
     "US Weekly":      "https://www.usmagazine.com/feed/",
-    "ESPN Celeb":     "https://www.espn.com/espn/rss/sportscelebsnews",
-    "SI Top Stories": "http://www.si.com/rss/si_topstories.rss",
+    "ESPN News":      "https://www.espn.com/espn/rss/news",
+    "BleacherReport": "http://feeds.feedburner.com/bleacherreport",
 }
 
 # 소스별 최소 글자 수 기준
 LENGTH_LIMITS = {
     "The-Sun":        300,
     "US Weekly":      300,
-    "ESPN Celeb":     0,
-    "SI Top Stories": 0,
+    "ESPN News":      0,    # ESPN은 무조건 수집
+    "BleacherReport": 0,
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
