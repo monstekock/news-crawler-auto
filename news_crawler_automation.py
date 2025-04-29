@@ -60,7 +60,7 @@ def clean(raw: str, maxlen=3000) -> str:
 
 fmt = lambda t: datetime(*t[:6]).strftime("%Y-%m-%d")
 
-def extract_content(entry, min_len=300):
+def extract_content(entry, min_len=100):
     if hasattr(entry, "content") and entry.content:
         raw = entry.content[0].value
         text = clean(raw)
