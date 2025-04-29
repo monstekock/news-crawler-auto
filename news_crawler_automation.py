@@ -33,7 +33,6 @@ FEEDS = {
     "The-Sun":         "https://www.the-sun.com/entertainment/feed/",
     "US Weekly":       "https://www.usmagazine.com/feed/",
     "MMA Fighting":    "https://www.mmafighting.com/rss/current",
-    "Bloody Elbow":    "https://www.bloodyelbow.com/rss/current",
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
