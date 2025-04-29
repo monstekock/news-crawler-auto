@@ -29,20 +29,19 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
            .worksheet("github news room")
 
 # ─────────────────────── 1. RSS 목록 ─────────────────────────
- FEEDS = {
-     "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
-     "US Weekly":      "https://www.usmagazine.com/feed/",
-     "SI Top Stories": "https://www.si.com/rss/si_topstories.rss",
-     "ESPN News":      "https://www.espn.com/espn/rss/news",
- }
+FEEDS = {
+    "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
+    "US Weekly":      "https://www.usmagazine.com/feed/",
+    "ESPN News":      "https://www.espn.com/espn/rss/news",
+    "SI Top Stories": "https://www.si.com/rss/si_topstories.rss",
+}
 
- # 소스별 최소 글자 수 기준
- LENGTH_LIMITS = {
-     "The-Sun":        300,
-     "US Weekly":      300,
-     "SI Top Stories": 150,
-     "ESPN News":      0,
- }
+LENGTH_LIMITS = {
+    "The-Sun":        300,
+    "US Weekly":      300,
+    "ESPN News":      0,    # ESPN은 무조건 수집
+    "SI Top Stories": 150,
+}
 
 UA = {"User-Agent": "Mozilla/5.0"}
 
