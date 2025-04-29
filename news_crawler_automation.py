@@ -36,13 +36,6 @@ FEEDS = {
     "SI Top Stories": "https://www.si.com/rss/si_topstories.rss",
 }
 
-LENGTH_LIMITS = {
-    "The-Sun":        300,
-    "US Weekly":      300,
-    "ESPN News":      0,    # ESPN은 무조건 수집
-    "SI Top Stories": 150,
-}
-
 UA = {"User-Agent": "Mozilla/5.0"}
 
 sess = requests.Session()
