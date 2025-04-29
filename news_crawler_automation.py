@@ -33,15 +33,15 @@ FEEDS = {
     "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
     "US Weekly":      "https://www.usmagazine.com/feed/",
     "ESPN Celeb":     "https://www.espn.com/espn/rss/sportscelebsnews",
-    "SI Top Stories": "https://www.si.com/.rss/si_topstories.rss",
+    "SI Top Stories": "http://www.si.com/rss/si_topstories.rss",
 }
 
 # 소스별 최소 글자 수 기준
 LENGTH_LIMITS = {
     "The-Sun":        300,
     "US Weekly":      300,
-    "ESPN Celeb":     150,   # 스포츠는 짧은 기사 허용
-    "SI Top Stories": 150,
+    "ESPN Celeb":     0,
+    "SI Top Stories": 0,
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
