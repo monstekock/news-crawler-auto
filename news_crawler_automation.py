@@ -32,8 +32,8 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
 FEEDS = {
     "The-Sun":        "https://www.the-sun.com/entertainment/feed/",
     "US Weekly":      "https://www.usmagazine.com/feed/",
-    "ESPN News":      "https://www.espn.com/espn/rss/news",
-    "SI Top Stories": "https://www.si.com/rss/si_topstories.rss",
+    "ESPN NFL":       "https://www.espn.com/espn/rss/nfl/news",
+    "ESPN NBA":       "https://www.espn.com/espn/rss/nba/news",
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
