@@ -32,8 +32,6 @@ sheet = gc.open_by_key("1IBkE0pECiWpF9kLdzEz7-1E-XyRBA02xiVHvwJCwKbc") \
 FEEDS = {
     "The-Sun":         "https://www.the-sun.com/entertainment/feed/",
     "US Weekly":       "https://www.usmagazine.com/feed/",
-    "MMA Fighting":    "https://www.mmafighting.com/rss/current",
-    "ProFootballTalk": "https://profootballtalk.nbcsports.com/feed/",
 }
 
 UA = {"User-Agent": "Mozilla/5.0"}
@@ -84,7 +82,7 @@ def fetch_xml(url: str, tries=5, pause=2.0):
         time.sleep(pause)
     return None
 
-def collect(max_each=10):
+def collect(max_each=20):
     rows = []
     for src, url in FEEDS.items():
         xml = fetch_xml(url)
